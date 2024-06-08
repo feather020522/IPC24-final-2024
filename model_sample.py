@@ -34,3 +34,49 @@ class Net(nn.Module):
         x = F.relu(x)
         x = self.fc3(x)
         return x
+
+from pytorch_metric_learning import distances, losses, miners, reducers, testers
+from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
+distance = distances.CosineSimilarity()
+reducer = reducers.ThresholdReducer(low=0)
+loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
+accuracy_calculator = AccuracyCalculator(include=("precision_at_1",), k=1)
+
+optimizer = optim.Adam(net.parameters(), lr=0.001)
+
+for epoch in range(epochs):  # loop over the dataset multiple times
+
+    running_loss = 0.0
+    for i, data in enumerate(room_dataloader_train, 0):
+
+        inputs, labels = data[0].cuda(), data[1].cuda()
+
+        # zero the parameter gradients
+        optimizer.zero_grad()
+
+        # forward + backward + optimize
+        outputs = net(inputs)
+        # print(outputs)
+        # print(outputs.size())
+        loss = loss_func(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        # print statistics
+        running_loss += loss.item()
+        # loss.item()
+        if i % loss_freq == loss_freq - 1 or i == len(room_dataloader_train) - 1:
+            running_loss /= (i % loss_freq + 1)
+            output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
+            print(output_str, file=ft)
+            losses_list.append(running_loss)
+            ts_writer.add_scalar(f"Loss per {loss_freq} mini_batch", running_loss, epoch * len(room_dataloader_train) + (i + 1))
+            running_loss = 0.0
+
+        # print("pass")
+
+    # get current time
+    nowTime = datetime.datetime.now()
+    output_str = f"epoch # {epoch + 1} done, {nowTime}"
+    print(output_str)
+    print(output_str, file=fs)
