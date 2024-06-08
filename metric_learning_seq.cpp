@@ -6,8 +6,9 @@
 #include <chrono>
 #include <iomanip>
 #include <algorithm>
+#include <torch/torch.h>
 
-#include "mnist/mnist_reader.hpp"
+// #include "mnist/mnist_reader.hpp"
 
 using namespace std;
 
@@ -270,27 +271,27 @@ void my_cnn(float *training_images_flat, int num_images,
 
 /* Read neural network's weight from file (in binary format)
  */
-void read_weight(float *array, string filename, int num_floats) {
-    string full_filename = string(WEIGHT_ROOT) + '/' + filename;
-    std::cout << "Reading file: " << full_filename << std::endl;
+// void read_weight(float *array, string filename, int num_floats) {
+//     string full_filename = string(WEIGHT_ROOT) + '/' + filename;
+//     std::cout << "Reading file: " << full_filename << std::endl;
 
-    ifstream file(full_filename, ios::in | ios::binary);
-    if (!file) {
-        std::cerr << "error reading file: " << full_filename << std::endl;
-        exit(1);
-    }
-    file.read((char *)array, num_floats * sizeof(float));
-}
+//     ifstream file(full_filename, ios::in | ios::binary);
+//     if (!file) {
+//         std::cerr << "error reading file: " << full_filename << std::endl;
+//         exit(1);
+//     }
+//     file.read((char *)array, num_floats * sizeof(float));
+// }
 
 /* Write predicted result to file
  */
-void write_predict(int *result, int n, char *filename) {
-    std::ofstream file(filename, std::ofstream::out);
-    for (int i = 0; i < n; i++) {
-        file << result[i] << '\n';
-    }
-    file.close();
-}
+// void write_predict(int *result, int n, char *filename) {
+//     std::ofstream file(filename, std::ofstream::out);
+//     for (int i = 0; i < n; i++) {
+//         file << result[i] << '\n';
+//     }
+//     file.close();
+// }
 
 /* Print an image
  * Usage: print_img(training_images[i])
@@ -313,6 +314,7 @@ void print_img(float *img) {
 int main(int argc, char *argv[]) {
     
     auto read_start = std::chrono::steady_clock::now();
+    torch::optim::Adam optimizer
     // std::cout << "MNIST data directory: " << MNIST_DATA_LOCATION << std::endl;
 
     /* Load MNIST data
