@@ -36,6 +36,8 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvi
 ```
 mkdir build
 cd build
+cmake -DCMAKE_PREFIX_PATH="${HOME}/anaconda3/envs/py39_torch_old/lib/python3.9/site-packages/torch" ..
+cmake --build . --config Release
 ```
 
 7. run main in build folder

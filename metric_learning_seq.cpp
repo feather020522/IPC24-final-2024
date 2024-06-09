@@ -427,10 +427,76 @@
 
 #include <torch/torch.h>
 
+__global__
+void sobel() {
+    // int x, y, i, v, u;
+    // int R, G, B;
+    // double val[MASK_N * 3] = {0.0};
+    // int adjustX, adjustY, xBound, yBound;
+    // // TOOD: no out of bound???
+    // int y_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    // int x_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    // int stride_x = blockDim.x * gridDim.x;
+    // int stride_y = blockDim.y * gridDim.y;
+    // for (y = y_idx; y < height; y += stride_y) {
+    //     for (x = x_idx; x < width; x += stride_x) {
+    //         for (i = 0; i < MASK_N; ++i) {
+    //             adjustX = (MASK_X % 2) ? 1 : 0;
+    //             adjustY = (MASK_Y % 2) ? 1 : 0;
+    //             xBound = MASK_X / 2;
+    //             yBound = MASK_Y / 2;
+
+    //             val[i * 3 + 2] = 0.0;
+    //             val[i * 3 + 1] = 0.0;
+    //             val[i * 3] = 0.0;
+
+    //             for (v = -yBound; v < yBound + adjustY; ++v) {
+    //                 for (u = -xBound; u < xBound + adjustX; ++u) {
+    //                     if ((x + u) >= 0 && (x + u) < width && y + v >= 0 && y + v < height) {
+    //                         R = s[channels * (width * (y + v) + (x + u)) + 2];
+    //                         G = s[channels * (width * (y + v) + (x + u)) + 1];
+    //                         B = s[channels * (width * (y + v) + (x + u)) + 0];
+    //                         val[i * 3 + 2] += R * mask[i][u + xBound][v + yBound];
+    //                         val[i * 3 + 1] += G * mask[i][u + xBound][v + yBound];
+    //                         val[i * 3 + 0] += B * mask[i][u + xBound][v + yBound];
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         double totalR = 0.0;
+    //         double totalG = 0.0;
+    //         double totalB = 0.0;
+    //         for (i = 0; i < MASK_N; ++i) {
+    //             totalR += val[i * 3 + 2] * val[i * 3 + 2];
+    //             totalG += val[i * 3 + 1] * val[i * 3 + 1];
+    //             totalB += val[i * 3 + 0] * val[i * 3 + 0];
+    //         }
+
+    //         totalR = sqrt(totalR) / SCALE;
+    //         totalG = sqrt(totalG) / SCALE;
+    //         totalB = sqrt(totalB) / SCALE;
+    //         const unsigned char cR = (totalR > 255.0) ? 255 : totalR;
+    //         const unsigned char cG = (totalG > 255.0) ? 255 : totalG;
+    //         const unsigned char cB = (totalB > 255.0) ? 255 : totalB;
+    //         t[channels * (width * y + x) + 2] = cR;
+    //         t[channels * (width * y + x) + 1] = cG;
+    //         t[channels * (width * y + x) + 0] = cB;
+
+    //     }
+        
+    // }
+}
+
 int main()
 {
     torch::Tensor tensor = torch::zeros({2, 2});
     std::cout << tensor << std::endl;
+
+    dim3 num_threads_per_block(32, 16, 1);
+    dim3 num_blocks((width / num_threads_per_block.x ) + 1, (height / num_threads_per_block.y) + 1, 1);
+
+    sobel<<<num_blocks, num_threads_per_block>>> ();
 
     return 0;
 }
