@@ -78,7 +78,7 @@ loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=redu
 
 # parameter
 
-epochs = 1000
+epochs = 200
 net = Net()
 net.cuda()
 optimizer = optim.Adam(net.parameters(), lr=0.001)
