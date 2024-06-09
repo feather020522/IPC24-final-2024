@@ -11,6 +11,8 @@ import torch.nn.functional as F
 import datetime
 # import numpy as np
 
+import sys
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -91,8 +93,9 @@ def my_acc_calculator(val_dataloader, model, distance, epoch = 199, val_dataset 
     for i in range(total):
         correct += actual_label[i] == predicted_label[i]
     accuracy = 100.0 * (float)(correct) / (float)(total) 
-    output_str = f"Test set accuracy (pos/neg pair) at epoch {epoch + 1} on dataset {val_dataset} = {accuracy}"
+    output_str = f"Test set accuracy (pos/neg pair)  on dataset {val_dataset} = {accuracy}"
     print(output_str)
+    # at epoch {epoch + 1}
     # print(output_str, file=fv)
     # ts_writer.add_scalar(f"accuracy per {val_freq} epoch on dataset {val_dataset}", accuracy, epoch + 1)
 
@@ -106,15 +109,20 @@ transform = transforms.Compose(
 batch_size = 4
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
+                                       download=False, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
+# val_weight = sys.argv[0]
+# val_weight.seek(0)
+val_weight = "./epoch50_sequential_batch16_single.pth"
+print(val_weight)
+
 net = Net()
-net.load_state_dict(torch.load("./cifar_net.pth"))
+net.load_state_dict(torch.load(val_weight))
 net.eval()
 net.cuda()
 distance = distances.CosineSimilarity()

@@ -16,15 +16,15 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-batch_size = 4
+batch_size = 16
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform=transform)
+                                        download=False, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                           shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
+                                       download=False, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2)
 
@@ -83,6 +83,11 @@ net = Net()
 net.cuda()
 optimizer = optim.Adam(net.parameters(), lr=0.001)
 
+# the time start training
+nowTime = datetime.datetime.now()
+output_str = f"Start training, {nowTime}"
+print(output_str)
+
 # training
 for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -95,7 +100,12 @@ for epoch in range(epochs):  # loop over the dataset multiple times
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = net(inputs)
+        
+        # parallelization
+        netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
+        outputs = netParallel(inputs)
+        
+        # outputs = net(inputs)
         loss = loss_func(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -127,5 +137,5 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     print(output_str)
     # print(output_str, file=fs)
 
-PATH = './cifar_net.pth'
+PATH = './dataparallel_epoch200_batch16.pth'
 torch.save(net.state_dict(), PATH)
