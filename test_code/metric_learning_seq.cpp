@@ -1,3 +1,4 @@
+<<<<<<< HEAD:metric_learning_seq.cpp
 // #include <iostream>
 // #include <cstdlib>
 // #include <string>
@@ -6,6 +7,17 @@
 // #include <chrono>
 // #include <iomanip>
 // #include <algorithm>
+=======
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <utility>
+#include <cmath>
+#include <chrono>
+#include <iomanip>
+#include <algorithm>
+#include <torch/torch.h>
+>>>>>>> audrey_run_dp:test_code/metric_learning_seq.cpp
 
 // #include "mnist/mnist_reader.hpp"
 
@@ -268,8 +280,13 @@
 //     delete[] fc2_output;
 // }
 
+<<<<<<< HEAD:metric_learning_seq.cpp
 // /* Read neural network's weight from file (in binary format)
 //  */
+=======
+/* Read neural network's weight from file (in binary format)
+ */
+>>>>>>> audrey_run_dp:test_code/metric_learning_seq.cpp
 // void read_weight(float *array, string filename, int num_floats) {
 //     string full_filename = string(WEIGHT_ROOT) + '/' + filename;
 //     std::cout << "Reading file: " << full_filename << std::endl;
@@ -282,8 +299,13 @@
 //     file.read((char *)array, num_floats * sizeof(float));
 // }
 
+<<<<<<< HEAD:metric_learning_seq.cpp
 // /* Write predicted result to file
 //  */
+=======
+/* Write predicted result to file
+ */
+>>>>>>> audrey_run_dp:test_code/metric_learning_seq.cpp
 // void write_predict(int *result, int n, char *filename) {
 //     std::ofstream file(filename, std::ofstream::out);
 //     for (int i = 0; i < n; i++) {
@@ -312,8 +334,14 @@
 
 // int main(int argc, char *argv[]) {
     
+<<<<<<< HEAD:metric_learning_seq.cpp
 //     auto read_start = std::chrono::steady_clock::now();
 //     // std::cout << "MNIST data directory: " << MNIST_DATA_LOCATION << std::endl;
+=======
+    auto read_start = std::chrono::steady_clock::now();
+    torch::optim::Adam optimizer
+    // std::cout << "MNIST data directory: " << MNIST_DATA_LOCATION << std::endl;
+>>>>>>> audrey_run_dp:test_code/metric_learning_seq.cpp
 
 //     /* Load MNIST data
 //      */

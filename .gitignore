@@ -1,1 +1,4 @@
+cifar_net.pth
+dataparallel_epoch50_batch16.pth
+data
 build
