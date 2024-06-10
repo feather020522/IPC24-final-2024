@@ -118,7 +118,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 # val_weight = sys.argv[0]
 # val_weight.seek(0)
-val_weight = "./epoch50_sequential_batch16_single.pth"
+val_weight = "./dataparallel_epoch50_batch16.pth"
 print(val_weight)
 
 net = Net()

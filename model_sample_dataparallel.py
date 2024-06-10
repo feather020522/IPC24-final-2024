@@ -16,7 +16,7 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-batch_size = 128
+batch_size = 512
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=False, transform=transform)
@@ -94,7 +94,7 @@ optimizer = optim.Adam(net.parameters(), lr=0.001)
 nowTime = datetime.datetime.now()
 output_str = f"Start training, {nowTime}"
 print(output_str)
-
+startTime = nowTime
 # training
 for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -143,6 +143,6 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     output_str = f"epoch # {epoch + 1} done, {nowTime}"
     print(output_str)
     # print(output_str, file=fs)
-
+print(f'Total time : {nowTime - startTime}')
 PATH = './dataparallel_epoch50_batch16.pth'
 torch.save(net.state_dict(), PATH)
