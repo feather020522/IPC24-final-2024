@@ -1,6 +1,8 @@
 import torch
 import torchvision
 import torchvision.transforms as transforms
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 from pytorch_metric_learning import distances, losses, miners, reducers, testers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
@@ -11,25 +13,19 @@ import torch.nn.functional as F
 import datetime
 # import numpy as np
 
-# load data
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.multiprocessing as mp
+import torch.distributed as dist
 
-batch_size = 16
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=False, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
+    # initialize the process group
+    dist.init_process_group("gloo", rank=rank, world_size=world_size)
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=False, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                         shuffle=False, num_workers=2)
-
-classes = ('plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+def cleanup():
+    dist.destroy_process_group()
 
 # model definition
 
@@ -70,72 +66,149 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
-# loss function
-distance = distances.CosineSimilarity()
-reducer = reducers.ThresholdReducer(low=0)
-loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
-# accuracy_calculator = AccuracyCalculator(include=("precision_at_1",), k=1)
-
-# parameter
-
-epochs = 200
-net = Net()
-net.cuda()
-optimizer = optim.Adam(net.parameters(), lr=0.001)
-
-# the time start training
-nowTime = datetime.datetime.now()
-output_str = f"Start training, {nowTime}"
-print(output_str)
-
 # training
-for epoch in range(epochs):  # loop over the dataset multiple times
-
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-
-        inputs, labels = data[0].cuda(), data[1].cuda()
-
-        # zero the parameter gradients
-        optimizer.zero_grad()
-
-        # forward + backward + optimize
-        
-        # parallelization
-        netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
-        outputs = netParallel(inputs)
-        
-        # outputs = net(inputs)
-        loss = loss_func(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-        # print statistics
-        running_loss += loss.item()
-        # loss.item()
-        # if i % 100 == 99:
-        #     running_loss /= (i % 100 + 1)
-        #     output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
-        #     print(output_str)
-        #     # losses_list.append(running_loss)
-        #     # ts_writer.add_scalar(f"Loss per {loss_freq} mini_batch", running_loss, epoch * len(room_dataloader_train) + (i + 1))
-        #     running_loss = 0.0
+def training(rank, world_size, trainloader, testloader):    
+    def my_acc_calculator(val_dataloader, model, distance, epoch = 199, val_dataset = "test"):
+                
+        actual_label = []
+        predicted_label = []
+        pos_threshold = 0.75
+        # target_label = ['negative pair', 'positive pair']
+        for i, data in enumerate(val_dataloader, 0):
+            inputs, labels = data[0].cuda(), data[1].cuda()
             
-        # if i % loss_freq == loss_freq - 1 or i == len(trainloader) - 1:
-        #     running_loss /= (i % loss_freq + 1)
-        #     output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
-        #     print(output_str, file=ft)
-        #     losses_list.append(running_loss)
-        #     ts_writer.add_scalar(f"Loss per {loss_freq} mini_batch", running_loss, epoch * len(room_dataloader_train) + (i + 1))
-        #     running_loss = 0.0
+            # print labels
+            # inputs, labels = data[0], data[1]
+            # imshow(torchvision.utils.make_grid(inputs))
+            # print('GroundTruth: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
+            
+            outputs = model(inputs)
+            mat = distance(outputs)
+            for idx in range(mat.size(dim=1)):
+                vec = mat[idx]
+                actual = [1 if x == labels[idx] else 0 for x in labels]
+                predicted = [1 if (y - pos_threshold) > 1e-9 else 0 for y in vec]
+                
+                actual_label += actual
+                predicted_label += predicted
+            
+        total = len(actual_label)
+        # print(actual_label)
+        # print(predicted_label)
+        correct = 0
+        for i in range(total):
+            correct += actual_label[i] == predicted_label[i]
+        accuracy = 100.0 * (float)(correct) / (float)(total) 
+        output_str = f"Test set accuracy (pos/neg pair)  on dataset {val_dataset} = {accuracy}"
+        print(output_str)
+        # at epoch {epoch + 1}
+        # print(output_str, file=fv)
+        # ts_writer.add_scalar(f"accuracy per {val_freq} epoch on dataset {val_dataset}", accuracy, epoch + 1)
+    
+    # loss function
+    distance = distances.CosineSimilarity()
+    reducer = reducers.ThresholdReducer(low=0)
+    loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
+    # accuracy_calculator = AccuracyCalculator(include=("precision_at_1",), k=1)
 
-        # print("pass")
+    # DDP
+    epochs = 50
+    setup(rank, world_size)
+    my_net = Net().to(rank)
+    ddp_net = DDP(my_net, device_ids=[rank])
+    optimizer = optim.Adam(ddp_net.parameters(), lr=0.001)
 
-    # get current time
+    for epoch in range(epochs):  # loop over the dataset multiple times
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+
+            inputs, labels = data[0].to(rank), data[1].to(rank)
+
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward + backward + optimize
+            
+            # parallelization
+            outputs = ddp_net(inputs)
+        
+            # dataparallel
+            # netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
+            # outputs = netParallel(inputs)
+            
+            # outputs = net(inputs)
+            loss = loss_func(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            # print statistics
+            running_loss += loss.item()
+            # loss.item()
+            # if i % 100 == 99:
+            #     running_loss /= (i % 100 + 1)
+            #     output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
+            #     print(output_str)
+            #     running_loss = 0.0
+
+        
+        # get current time
+        nowTime = datetime.datetime.now()
+        output_str = f"epoch # {epoch + 1} done, {nowTime}, rank {rank}"
+        print(output_str)
+        # print(output_str, file=fs)
+
+    cleanup()
+    my_acc_calculator(testloader, ddp_net, distance)
+    
+    PATH = f'./DDP_epoch50_batch16_rank{rank}.pth'
+    torch.save(ddp_net.state_dict(), PATH)
+
+    
+
+
+if __name__ == '__main__':
+    # load data
+    transform = transforms.Compose(
+        [transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    batch_size = 16
+
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+                                            download=False, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                            shuffle=True, num_workers=2)
+
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+                                        download=False, transform=transform)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+                                            shuffle=False, num_workers=2)
+
+    classes = ('plane', 'car', 'bird', 'cat',
+            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+
+
+    # parameter
+
+    # epochs = 50
+    # net = Net()
+    # net.cuda()
+    # optimizer = optim.Adam(net.parameters(), lr=0.001)
+
+    # the time start training
     nowTime = datetime.datetime.now()
-    output_str = f"epoch # {epoch + 1} done, {nowTime}"
+    output_str = f"Start training, {nowTime}"
     print(output_str)
-    # print(output_str, file=fs)
 
-PATH = './dataparallel_epoch200_batch16.pth'
-torch.save(net.state_dict(), PATH)
+    # training
+
+
+    n_gpus = torch.cuda.device_count()
+    assert n_gpus >= 2, f"Requires at least 2 GPUs to run, but got {n_gpus}"
+    world_size = n_gpus
+
+    mp.spawn(training,
+            args=(world_size,trainloader,testloader,),
+            nprocs=world_size,
+            join=True)
