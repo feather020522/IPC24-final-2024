@@ -16,6 +16,7 @@ import datetime
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 import torch.distributed as dist
+# print('why')
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -23,6 +24,7 @@ def setup(rank, world_size):
 
     # initialize the process group
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
+    # torch.distributed.init_process_group(backend="nccl", rank=rank, init_method="env://", world_size=world_size)
 
 def cleanup():
     dist.destroy_process_group()
@@ -157,6 +159,7 @@ def training(rank, world_size, trainloader, testloader):
         print(output_str)
         # print(output_str, file=fs)
 
+    print(f'{startTime - nowTime}')
     cleanup()
     my_acc_calculator(testloader, ddp_net, distance)
     
@@ -212,3 +215,5 @@ if __name__ == '__main__':
             args=(world_size,trainloader,testloader,),
             nprocs=world_size,
             join=True)
+
+# python -m torch.distributed.launch xxx.py
