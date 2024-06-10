@@ -16,7 +16,7 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-batch_size = 16
+batch_size = 128
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=False, transform=transform)
@@ -80,7 +80,14 @@ loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=redu
 
 epochs = 50
 net = Net()
-net.cuda()
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.cuda.device_count() > 1:
+  print("Let's use", torch.cuda.device_count(), "GPUs!")
+  # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+  netParallel = nn.DataParallel(net, device_ids=[0,1])
+
+netParallel.to(device)
+# net.cuda()
 optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 # the time start training
@@ -94,7 +101,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
 
-        inputs, labels = data[0].cuda(), data[1].cuda()
+        inputs, labels = data[0].to(device), data[1].to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
@@ -102,7 +109,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
         # forward + backward + optimize
         
         # parallelization
-        netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
+        # netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
         outputs = netParallel(inputs)
         
         # outputs = net(inputs)
