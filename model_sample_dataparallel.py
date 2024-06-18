@@ -11,12 +11,14 @@ import torch.nn.functional as F
 import datetime
 # import numpy as np
 
+from torch.profiler import profile, record_function, ProfilerActivity
+
 # load data
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-batch_size = 512
+batch_size = 256
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=False, transform=transform)
@@ -78,7 +80,7 @@ loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=redu
 
 # parameter
 
-epochs = 50
+epochs = 10
 net = Net()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if torch.cuda.device_count() > 1:
@@ -86,7 +88,7 @@ if torch.cuda.device_count() > 1:
   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
   netParallel = nn.DataParallel(net, device_ids=[0,1])
 
-netParallel.to(device)
+netParallel = netParallel.to(device)
 # net.cuda()
 optimizer = optim.Adam(net.parameters(), lr=0.001)
 
@@ -96,53 +98,43 @@ output_str = f"Start training, {nowTime}"
 print(output_str)
 startTime = nowTime
 # training
-for epoch in range(epochs):  # loop over the dataset multiple times
+with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True, ) as prof:
+    with record_function("model_inference"):
+        for epoch in range(epochs):  # loop over the dataset multiple times
 
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
+            running_loss = 0.0
+            for i, data in enumerate(trainloader, 0):
 
-        inputs, labels = data[0].to(device), data[1].to(device)
+                inputs, labels = data[0].to(device), data[1].to(device)
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+                # zero the parameter gradients
+                optimizer.zero_grad()
 
-        # forward + backward + optimize
-        
-        # parallelization
-        # netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
-        outputs = netParallel(inputs)
-        
-        # outputs = net(inputs)
-        loss = loss_func(outputs, labels)
-        loss.backward()
-        optimizer.step()
+                # forward + backward + optimize
+                
+                # parallelization
+                # netParallel = torch.nn.DataParallel(net, device_ids=[0,1])
+                outputs = netParallel(inputs)
+                
+                # outputs = net(inputs)
+                loss = loss_func(outputs, labels)
+                loss.backward()
+                optimizer.step()
 
-        # print statistics
-        running_loss += loss.item()
-        # loss.item()
-        # if i % 100 == 99:
-        #     running_loss /= (i % 100 + 1)
-        #     output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
-        #     print(output_str)
-        #     # losses_list.append(running_loss)
-        #     # ts_writer.add_scalar(f"Loss per {loss_freq} mini_batch", running_loss, epoch * len(room_dataloader_train) + (i + 1))
-        #     running_loss = 0.0
-            
-        # if i % loss_freq == loss_freq - 1 or i == len(trainloader) - 1:
-        #     running_loss /= (i % loss_freq + 1)
-        #     output_str = f'[{epoch + 1}] [data:{i+1}] loss: {running_loss:.6f}'
-        #     print(output_str, file=ft)
-        #     losses_list.append(running_loss)
-        #     ts_writer.add_scalar(f"Loss per {loss_freq} mini_batch", running_loss, epoch * len(room_dataloader_train) + (i + 1))
-        #     running_loss = 0.0
+                # print statistics
+                running_loss += loss.item()
+               
+            # prof.step()
+            torch.cuda.empty_cache()
 
-        # print("pass")
+            # get current time
+            nowTime = datetime.datetime.now()
+            output_str = f"epoch # {epoch + 1} done, {nowTime}"
+            print(output_str)
+            # print(output_str, file=fs)
 
-    # get current time
-    nowTime = datetime.datetime.now()
-    output_str = f"epoch # {epoch + 1} done, {nowTime}"
-    print(output_str)
-    # print(output_str, file=fs)
+    
 print(f'Total time : {nowTime - startTime}')
+print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=100))
 PATH = './dataparallel_epoch50_batch16.pth'
 torch.save(net.state_dict(), PATH)

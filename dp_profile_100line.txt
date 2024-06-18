@@ -1,0 +1,120 @@
+Let's use 2 GPUs!
+Start training, 2024-06-18 08:27:20.956847
+epoch # 1 done, 2024-06-18 08:27:30.198729
+epoch # 2 done, 2024-06-18 08:27:36.805202
+epoch # 3 done, 2024-06-18 08:27:43.438308
+epoch # 4 done, 2024-06-18 08:27:50.123840
+epoch # 5 done, 2024-06-18 08:27:56.850248
+epoch # 6 done, 2024-06-18 08:28:03.567461
+epoch # 7 done, 2024-06-18 08:28:10.409558
+epoch # 8 done, 2024-06-18 08:28:17.114641
+epoch # 9 done, 2024-06-18 08:28:23.858983
+epoch # 10 done, 2024-06-18 08:28:30.687804
+Total time : 0:01:09.730957
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+    autograd::engine::evaluate_function: IndexBackward0         0.14%     128.799ms         4.12%        3.668s     623.788us       0.000us         0.00%       11.327s       1.926ms          5880  
+                                         IndexBackward0         0.10%      89.371ms         3.92%        3.489s     593.432us       0.000us         0.00%       11.314s       1.924ms          5880  
+                                 aten::_index_put_impl_         0.71%     629.881ms         3.45%        3.075s     522.913us        8.697s        40.35%       11.254s       1.914ms          5880  
+void (anonymous namespace)::indexing_backward_kernel...         0.00%       0.000us         0.00%       0.000us       0.000us        7.116s        33.01%        7.116s       1.210ms          5880  
+                                        model_inference        26.55%       23.649s        78.07%       69.549s       69.549s       0.000us         0.00%        6.024s        6.024s             1  
+autograd::engine::evaluate_function: ConvolutionBack...         0.30%     266.197ms         5.40%        4.813s     409.226us       0.000us         0.00%        3.021s     256.858us         11760  
+                             aten::convolution_backward         2.27%        2.025s         4.91%        4.375s     372.046us        1.977s         9.17%        3.021s     256.858us         11760  
+                                   ConvolutionBackward0         0.19%     171.043ms         5.10%        4.546s     386.574us       0.000us         0.00%        3.020s     256.827us         11760  
+                                   DataParallel.forward         5.79%        5.156s        12.92%       11.506s       5.870ms       0.000us         0.00%        2.501s       1.276ms          1960  
+                                       cudaLaunchKernel         6.21%        5.533s         6.23%        5.554s      12.535us        1.675s         7.77%        1.734s       3.914us        443096  
+                                            aten::copy_         0.62%     549.337ms         2.59%        2.305s      69.166us        1.380s         6.40%        1.490s      44.706us         33320  
+                                         aten::_to_copy         0.26%     234.579ms         3.45%        3.077s     104.677us       0.000us         0.00%        1.449s      49.280us         29400  
+                                               aten::to         0.11%     101.265ms         3.55%        3.165s      73.382us       0.000us         0.00%        1.445s      33.507us         43130  
+                                          aten::nonzero         0.64%     573.112ms         1.56%        1.390s     236.475us     988.414ms         4.59%        1.409s     239.681us          5880  
+void at_cuda_detail::cub::DeviceRadixSortOnesweepKer...         0.00%       0.000us         0.00%       0.000us       0.000us        1.356s         6.29%        1.356s      98.901us         13710  
+                                              Broadcast         0.71%     636.680ms         1.72%        1.532s     781.844us        1.040s         4.83%        1.171s     597.352us          1960  
+ncclKernel_Broadcast_RING_LL_Sum_int8_t(ncclDevComm*...         0.00%       0.000us         0.00%       0.000us       0.000us        1.040s         4.83%        1.040s     265.393us          3920  
+                                            aten::where         0.18%     163.046ms         1.00%     889.529ms     151.280us       9.861ms         0.05%        1.005s     170.854us          5880  
+                                    aten::nonzero_numpy         0.02%      13.789ms         0.71%     631.669ms     322.280us       0.000us         0.00%     996.834ms     508.589us          1960  
+                                              aten::mul         0.60%     533.572ms         0.91%     810.202ms      34.439us     783.594ms         3.64%     882.101ms      37.495us         23526  
+autograd::engine::evaluate_function: BroadcastBackwa...         0.16%     141.404ms         2.24%        1.996s       1.018ms       0.000us         0.00%     869.939ms     443.846us          1960  
+                                      BroadcastBackward         0.15%     134.464ms         2.08%        1.854s     946.159us       0.000us         0.00%     869.939ms     443.846us          1960  
+                                     ReduceAddCoalesced         0.96%     856.228ms         1.93%        1.720s     877.555us     769.984ms         3.57%     869.939ms     443.846us          1960  
+                       Memcpy HtoD (Pageable -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     815.554ms         3.78%     815.554ms     206.679us          3946  
+autograd::engine::evaluate_function: MaxPool2DWithIn...         0.16%     146.252ms         1.01%     895.598ms     114.234us       0.000us         0.00%     809.589ms     103.264us          7840  
+                 aten::max_pool2d_with_indices_backward         0.28%     246.480ms         0.77%     684.108ms      87.259us     634.181ms         2.94%     809.589ms     103.264us          7840  
+                          MaxPool2DWithIndicesBackward0         0.07%      65.238ms         0.84%     749.058ms      95.543us       0.000us         0.00%     809.012ms     103.190us          7840  
+ncclKernel_Reduce_RING_LL_Sum_float(ncclDevComm*, un...         0.00%       0.000us         0.00%       0.000us       0.000us     769.984ms         3.57%     769.984ms     196.424us          3920  
+void cudnn::detail::dgrad_engine<float, 512, 6, 5, 3...         0.00%       0.000us         0.00%       0.000us       0.000us     735.562ms         3.41%     735.562ms     187.643us          3920  
+void at::native::(anonymous namespace)::max_pool_bac...         0.00%       0.000us         0.00%       0.000us       0.000us     634.181ms         2.94%     634.181ms      80.890us          7840  
+                                            aten::index         0.32%     283.527ms         0.96%     852.370ms     144.961us     371.665ms         1.72%     601.333ms     102.268us          5880  
+                                                Scatter         0.36%     319.121ms         2.02%        1.802s     459.797us       0.000us         0.00%     598.483ms     152.674us          3920  
+                                        aten::remainder         0.28%     250.823ms         0.40%     359.902ms      36.717us     524.158ms         2.43%     560.774ms      57.210us          9802  
+     autograd::engine::evaluate_function: ReluBackward0         0.29%     255.706ms         1.35%        1.206s      68.380us       0.000us         0.00%     553.120ms      31.356us         17640  
+                               aten::threshold_backward         0.61%     544.798ms         0.90%     805.584ms      45.668us     476.508ms         2.21%     553.120ms      31.356us         17640  
+                                          ReluBackward0         0.16%     144.929ms         1.07%     950.494ms      53.883us       0.000us         0.00%     553.118ms      31.356us         17640  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     531.347ms         2.47%     531.347ms      54.219us          9800  
+void at_cuda_detail::cub::DeviceSelectSweepKernel<at...         0.00%       0.000us         0.00%       0.000us       0.000us     513.415ms         2.38%     513.415ms     261.946us          1960  
+cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFla...         0.20%     174.131ms         0.20%     174.319ms       1.327us     492.415ms         2.28%     493.181ms       3.755us        131324  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     476.508ms         2.21%     476.508ms      27.013us         17640  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     464.230ms         2.15%     464.230ms      52.658us          8816  
+                                             aten::add_         0.38%     337.382ms         0.77%     683.899ms      21.764us     371.433ms         1.72%     406.572ms      12.938us         31424  
+void cutlass_cudnn::Kernel<cutlass_tensorop_s1688fpr...         0.00%       0.000us         0.00%       0.000us       0.000us     405.570ms         1.88%     405.570ms     103.462us          3920  
+sm86_xmma_wgrad_implicit_gemm_indexed_tf32f32_tf32f3...         0.00%       0.000us         0.00%       0.000us       0.000us     391.571ms         1.82%     391.571ms     100.403us          3900  
+                                              aten::sum         1.02%     910.916ms         1.41%        1.255s      53.363us     293.025ms         1.36%     383.651ms      16.312us         23520  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     371.665ms         1.72%     371.665ms      63.208us          5880  
+                                               aten::mm         1.02%     913.069ms         1.51%        1.342s      62.231us     126.348ms         0.59%     357.181ms      16.567us         21560  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     352.568ms         1.64%     352.568ms      89.941us          3920  
+void wgrad_alg0_engine<float, 128, 5, 5, 3, 3, 3, fa...         0.00%       0.000us         0.00%       0.000us       0.000us     347.827ms         1.61%     347.827ms      88.731us          3920  
+                                           aten::arange         0.12%     105.337ms         0.48%     426.516ms      36.268us     141.972ms         0.66%     347.787ms      29.574us         11760  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     341.944ms         1.59%     341.944ms      15.860us         21560  
+    autograd::engine::evaluate_function: AddmmBackward0         0.33%     291.508ms         2.39%        2.126s     271.210us       0.000us         0.00%     332.589ms      42.422us          7840  
+                               Optimizer.step#Adam.step         1.24%        1.104s         3.33%        2.968s       1.514ms       0.000us         0.00%     330.526ms     168.636us          1960  
+                                             aten::div_         0.13%     116.290ms         0.21%     191.373ms      32.546us     287.685ms         1.33%     311.813ms      53.029us          5880  
+                                          aten::divide_         0.03%      22.438ms         0.24%     209.801ms      35.680us       0.000us         0.00%     303.824ms      51.671us          5880  
+                         Memcpy DtoH (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     300.526ms         1.39%     300.526ms      51.110us          5880  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     287.685ms         1.33%     287.685ms      48.926us          5880  
+                                    cudaPeekAtLastError         0.00%     342.000us         0.00%     342.000us       0.005us     276.597ms         1.28%     276.597ms       3.815us         72504  
+                                        cudaMemsetAsync         1.03%     917.522ms         1.04%     929.427ms      12.824us     263.208ms         1.22%     270.135ms       3.727us         72478  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     265.738ms         1.23%     265.738ms      22.597us         11760  
+                         Memcpy HtoD (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     254.426ms         1.18%     254.426ms      43.270us          5880  
+                                            aten::fill_         0.30%     271.035ms         0.72%     638.141ms      29.571us     169.830ms         0.79%     250.827ms      11.623us         21580  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     238.227ms         1.11%     238.227ms      15.193us         15680  
+void at::native::(anonymous namespace)::max_pool_for...         0.00%       0.000us         0.00%       0.000us       0.000us     234.294ms         1.09%     234.294ms      29.884us          7840  
+void at::native::(anonymous namespace)::write_indice...         0.00%       0.000us         0.00%       0.000us       0.000us     233.838ms         1.08%     233.838ms     119.305us          1960  
+                                         AddmmBackward0         0.20%     176.761ms         1.56%        1.386s     176.804us       0.000us         0.00%     233.346ms      29.764us          7840  
+void at::native::elementwise_kernel<128, 4, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     228.695ms         1.06%     228.695ms     116.681us          1960  
+                                        Memset (Device)         0.00%       0.000us         0.00%       0.000us       0.000us     219.387ms         1.02%     219.387ms       3.197us         68614  
+            cudnn_ampere_scudnn_128x32_relu_small_nn_v1         0.00%       0.000us         0.00%       0.000us       0.000us     207.352ms         0.96%     207.352ms      53.167us          3900  
+                                            aten::zero_         0.11%      94.116ms         0.60%     533.484ms      38.827us       0.000us         0.00%     205.719ms      14.972us         13740  
+void cudnn::ops::nchwToNhwcKernel<float, float, floa...         0.00%       0.000us         0.00%       0.000us       0.000us     200.931ms         0.93%     200.931ms       8.565us         23460  
+void tensorTransformGeneric<float, float, float, tru...         0.00%       0.000us         0.00%       0.000us       0.000us     199.734ms         0.93%     199.734ms      25.411us          7860  
+                                 cudaDeviceGetAttribute         0.04%      33.679ms         0.04%      33.750ms       0.614us     195.457ms         0.91%     195.535ms       3.555us         54997  
+void at_cuda_detail::cub::DeviceRadixSortHistogramKe...         0.00%       0.000us         0.00%       0.000us       0.000us     182.585ms         0.85%     182.585ms      31.052us          5880  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     165.910ms         0.77%     165.910ms       8.456us         19620  
+                                  cudaStreamIsCapturing         0.80%     710.892ms         0.80%     711.005ms      19.007us     147.326ms         0.68%     147.436ms       3.941us         37408  
+                                              aten::div         0.58%     514.316ms         0.89%     795.531ms      36.898us      52.912ms         0.25%     145.687ms       6.757us         21560  
+void (anonymous namespace)::elementwise_kernel_with_...         0.00%       0.000us         0.00%       0.000us       0.000us     141.972ms         0.66%     141.972ms      24.145us          5880  
+      autograd::engine::evaluate_function: DivBackward0         0.10%      86.828ms         0.88%     785.092ms     200.279us       0.000us         0.00%     129.331ms      32.993us          3920  
+autograd::engine::evaluate_function: LinalgVectorNor...         0.09%      84.619ms         0.92%     819.024ms     208.935us       0.000us         0.00%     123.004ms      31.379us          3920  
+                                           DivBackward0         0.10%      87.895ms         0.74%     656.297ms     167.423us       0.000us         0.00%     120.252ms      30.677us          3920  
+                                  cudaStreamGetPriority         0.03%      28.101ms         0.03%      28.198ms       0.899us     118.741ms         0.55%     118.771ms       3.787us         31360  
+                                  cudaFuncGetAttributes         0.83%     741.409ms         0.83%     742.216ms      51.885us     109.941ms         0.51%     111.967ms       7.827us         14305  
+                                    cudaStreamWaitEvent         0.10%      92.676ms         0.10%      92.676ms       3.377us     110.761ms         0.51%     110.761ms       4.036us         27440  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     104.932ms         0.49%     104.932ms      10.707us          9800  
+                              LinalgVectorNormBackward0         0.10%      90.207ms         0.73%     650.230ms     165.875us       0.000us         0.00%     104.863ms      26.751us          3920  
+                       cudaDeviceGetStreamPriorityRange         0.03%      26.522ms         0.03%      26.587ms       0.848us     103.254ms         0.48%     103.378ms       3.297us         31358  
+void at_cuda_detail::cub::DeviceSelectSweepKernel<at...         0.00%       0.000us         0.00%       0.000us       0.000us      96.638ms         0.45%      96.638ms      24.653us          3920  
+                                              aten::sub         0.06%      52.215ms         0.09%      76.485ms      39.023us      86.067ms         0.40%      94.751ms      48.342us          1960  
+void at_cuda_detail::cub::DeviceReduceKernel<at_cuda...         0.00%       0.000us         0.00%       0.000us       0.000us      93.040ms         0.43%      93.040ms      47.469us          1960  
+                                              aten::neg         0.12%     105.128ms         0.19%     165.448ms      28.137us      68.650ms         0.32%      91.678ms      15.591us          5880  
+       autograd::engine::evaluate_function: MmBackward0         0.05%      43.114ms         0.43%     382.410ms     195.107us       0.000us         0.00%      91.526ms      46.697us          1960  
+                                            MmBackward0         0.05%      43.601ms         0.38%     339.296ms     173.110us       0.000us         0.00%      91.526ms      46.697us          1960  
+                                        aten::clamp_min         0.15%     132.914ms         0.23%     205.141ms      34.888us      69.144ms         0.32%      90.178ms      15.336us          5880  
+                                aten::_foreach_addcdiv_         0.08%      71.603ms         0.11%      96.458ms      49.213us      77.410ms         0.36%      85.165ms      43.452us          1960  
+                                    aten::_foreach_mul_         0.16%     145.468ms         0.25%     223.059ms      56.903us      63.963ms         0.30%      81.294ms      20.738us          3920  
+void at::native::(anonymous namespace)::multi_tensor...         0.00%       0.000us         0.00%       0.000us       0.000us      77.410ms         0.36%      77.410ms      39.495us          1960  
+                                             aten::relu         0.03%      28.992ms         0.10%      91.314ms      46.589us       0.000us         0.00%      74.152ms      37.833us          1960  
+                                   cudaFuncSetAttribute         0.04%      39.899ms         0.04%      40.027ms       2.555us      71.677ms         0.33%      73.735ms       4.706us         15669  
+                                        cudaMemcpyAsync         2.14%        1.904s         2.14%        1.904s      97.002us      69.579ms         0.32%      69.599ms       3.546us         19625  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 89.085s
+Self CUDA time total: 21.553s
+
