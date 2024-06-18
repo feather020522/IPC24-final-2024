@@ -14,6 +14,8 @@ import datetime
 from pytorch_metric_learning import distances, losses, miners, reducers, testers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 
+from torch.profiler import profile, record_function, ProfilerActivity
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -64,47 +66,54 @@ def ddp_example(rank, world_size):
     loss_func = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
 
     optimizer = optim.Adam(ddp_model.parameters(), lr=0.001)
+    with profile(
+    activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as p:
+        with record_function("model_inference"):
+            with torch.cuda.device(rank):
+                transform = transforms.Compose(
+                    [transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    with torch.cuda.device(rank):
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+                batch_size = 256
+                epoch = 10
 
-        batch_size = 512
-        epoch = 50
+                trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+                                                        download=False, transform=transform)
 
-        trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                                download=False, transform=transform)
+                sampler = DistributedSampler(trainset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
+                trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                                    shuffle=False, num_workers=0, sampler=sampler)
 
-        sampler = DistributedSampler(trainset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                            shuffle=False, num_workers=0, sampler=sampler)
+                # dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers, drop_last=False, shuffle=False, sampler=sampler)
 
-        # dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers, drop_last=False, shuffle=False, sampler=sampler)
-
-        
-        # tik = time.time()
-        startTime = datetime.datetime.now()
-        # start = torch.cuda.Event(enable_timing=True)
-        # end = torch.cuda.Event(enable_timing=True)
-        # start.record()
-        for ep in range(epoch):
-            trainloader.sampler.set_epoch(epoch)     
-            for (i, data) in enumerate(trainloader, 0):
-                # forward pass
-                x, label = data[0].to(rank), data[1].to(rank)
-                outputs = ddp_model(x)
-                # backward pass
-                loss_func(outputs, label).backward()
-                # update parameters
-                optimizer.step()
-        # end.record()
-        # print(f"DDP rank-{rank} execution time (ms) by CUDA event {start.elapsed_time(end)}")
-        # torch.cuda.synchronize()
-        # tok = time.time()
-        nowTime = datetime.datetime.now()
-        print(f"DDP rank-{rank} execution time (s) by Python time {nowTime - startTime} ")
-        cleanup()
+                
+                # tik = time.time()
+                startTime = datetime.datetime.now()
+                # start = torch.cuda.Event(enable_timing=True)
+                # end = torch.cuda.Event(enable_timing=True)
+                # start.record()
+                for ep in range(epoch):
+                    trainloader.sampler.set_epoch(epoch)     
+                    for (i, data) in enumerate(trainloader, 0):
+                        # forward pass
+                        x, label = data[0].to(rank), data[1].to(rank)
+                        outputs = ddp_model(x)
+                        # backward pass
+                        loss_func(outputs, label).backward()
+                        # update parameters
+                        optimizer.step()
+                    nowTime = datetime.datetime.now()
+                    output_str = f"epoch # {ep + 1} done, {nowTime}"
+                    print(output_str)
+                # end.record()
+                # print(f"DDP rank-{rank} execution time (ms) by CUDA event {start.elapsed_time(end)}")
+                # torch.cuda.synchronize()
+                # tok = time.time()
+                nowTime = datetime.datetime.now()
+                print(f"DDP rank-{rank} execution time (s) by Python time {nowTime - startTime} ")
+                cleanup()
+                if (rank == 0):
+                    print(p.key_averages().table(sort_by="cuda_time_total", row_limit=100))
 
 def cleanup():
     dist.destroy_process_group()
@@ -112,11 +121,14 @@ def cleanup():
 def main():
 
     world_size = 2
+    # with profile(
+    # activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as p:
+        # with record_function("model_inference"):
     mp.spawn(ddp_example,
         args=(world_size,),
         nprocs=world_size,
         join=True)
-
+    # print(p.key_averages().table(sort_by="cuda_time_total", row_limit=10))
 
 if __name__=="__main__":
     main()
