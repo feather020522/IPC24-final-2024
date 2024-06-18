@@ -118,9 +118,9 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 # val_weight = sys.argv[0]
 # val_weight.seek(0)
-val_weight = "./dataparallel_epoch50_batch16.pth"
-print(val_weight)
-
+val_weight = "./DDP_epoch50_batch16_rank0.pth"
+# print(val_weight)
+# print(torch.load(val_weight))
 net = Net()
 net.load_state_dict(torch.load(val_weight))
 net.eval()

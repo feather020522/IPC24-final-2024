@@ -70,13 +70,13 @@ def ddp_example(rank, world_size):
             [transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-        batch_size = 512
+        batch_size = 128
         epoch = 50
 
         trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                 download=False, transform=transform)
 
-        sampler = DistributedSampler(trainset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
+        sampler = DistributedSampler(trainset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=False)
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                             shuffle=False, num_workers=0, sampler=sampler)
 
@@ -93,6 +93,7 @@ def ddp_example(rank, world_size):
             for (i, data) in enumerate(trainloader, 0):
                 # forward pass
                 x, label = data[0].to(rank), data[1].to(rank)
+                optimizer.zero_grad()
                 outputs = ddp_model(x)
                 # backward pass
                 loss_func(outputs, label).backward()
@@ -104,6 +105,8 @@ def ddp_example(rank, world_size):
         # tok = time.time()
         nowTime = datetime.datetime.now()
         print(f"DDP rank-{rank} execution time (s) by Python time {nowTime - startTime} ")
+        PATH = f'./DDP_epoch50_batch16_rank{rank}.pth'
+        torch.save(ddp_model.module.state_dict(), PATH)
         cleanup()
 
 def cleanup():
@@ -120,3 +123,5 @@ def main():
 
 if __name__=="__main__":
     main()
+# use this comment to run
+# python -m torch.distributed.launch model_ddp.py
